@@ -2,7 +2,7 @@
 
 Aplicação para consultar cães, gatos e os centros de adoção responsáveis por eles. O backend oferece uma API REST em Java; a interface independente em React ainda será desenvolvida.
 
-> **Estado:** em desenvolvimento. O backend possui quatro rotas de leitura de animais. Ainda não há frontend implementado.
+> **Estado:** em desenvolvimento. O backend possui quatro rotas de leitura de animais e operações de listagem, cadastro, alteração e exclusão de raças. Ainda não há frontend implementado.
 
 ## Estrutura
 
@@ -48,7 +48,7 @@ Na pasta `backend/`, execute:
 
 Em Linux ou macOS, use `./mvnw spring-boot:run`. No Eclipse, importe `backend/` como projeto Maven e execute `br.org.plumaris.adocao.AdocaoApplication` como aplicação Java. Se a variável `DB_PASSWORD` foi criada após abrir o Eclipse, reinicie o IDE antes de executar.
 
-O servidor inicia na porta 8080. As rotas disponíveis são:
+O servidor inicia na porta 8080. As rotas de consulta de animais são:
 
 - `GET /api/animais`: lista os animais com os nomes do centro de adoção e da raça.
 - `GET /api/animais/resumo-por-especie`: retorna os totais de animais disponíveis e indisponíveis por espécie.
@@ -56,6 +56,8 @@ O servidor inicia na porta 8080. As rotas disponíveis são:
 - `GET /api/animais/recomendados?userId=1`: lista animais disponíveis que atendem aos filtros cadastrados nas preferências do usuário. Retorna uma lista vazia quando não há preferências ou correspondências.
 
 Os campos das respostas JSON usam nomes em inglês. O SQL está explícito no repositório JDBC; as quatro consultas estão reunidas em `database/03_consultas.sql`. Para executar a quarta no Workbench com outro usuário, altere o valor de `@user_id` no arquivo.
+
+Para gerenciar raças, a API oferece `GET /api/racas`, `GET /api/racas/{id}`, `POST /api/racas`, `PUT /api/racas/{id}` e `DELETE /api/racas/{id}`. As requisições de criação e alteração recebem JSON como `{"name":"Corgi","species":"Cao"}`. Os valores aceitos para `species` são `Cao` e `Gato`. Ao excluir uma raça usada por animais ou preferências, os registros permanecem com `idRaca` nulo, conforme as chaves estrangeiras do banco.
 
 ## Contribuição
 
