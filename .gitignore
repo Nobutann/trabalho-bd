@@ -1,0 +1,42 @@
+# Arquivos locais e segredos
+.env
+.env.*
+!.env.example
+!.env.sample
+**/application-local.yml
+**/application-local.yaml
+**/application-local.properties
+
+# Java / Maven
+**/target/
+**/.apt_generated/
+**/*.class
+**/hs_err_pid*
+
+# Eclipse / Spring Tools
+.metadata/
+**/.project
+**/.classpath
+**/.factorypath
+**/.settings/
+**/.springBeans
+**/.sts4-cache/
+**/.recommenders/
+
+# Outros editores
+.idea/
+.vscode/
+**/*.iml
+
+# Frontend React / TypeScript
+**/node_modules/
+**/dist/
+**/coverage/
+**/.vite/
+**/*.tsbuildinfo
+
+# Logs e arquivos temporários
+**/*.log
+**/*.tmp
+.DS_Store
+Thumbs.db
