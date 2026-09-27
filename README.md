@@ -1,8 +1,8 @@
 # Adoção
 
-Aplicação web para consultar cães e gatos disponíveis para adoção e os centros responsáveis por eles. O projeto terá uma API REST em Java e uma interface independente em React.
+Aplicação para consultar cães, gatos e os centros de adoção responsáveis por eles. O backend oferece uma API REST em Java; a interface independente em React ainda será desenvolvida.
 
-> **Estado:** em desenvolvimento. O backend possui duas rotas de leitura de animais. Ainda não há frontend implementado.
+> **Estado:** em desenvolvimento. O backend possui três rotas de leitura de animais. Ainda não há frontend implementado.
 
 ## Estrutura
 
@@ -52,8 +52,9 @@ O servidor inicia na porta 8080. As rotas disponíveis são:
 
 - `GET /api/animais`: lista os animais com os nomes do centro de adoção e da raça.
 - `GET /api/animais/resumo-por-especie`: retorna os totais de animais disponíveis e indisponíveis por espécie.
+- `GET /api/animais/faixas-etarias`: retorna a quantidade de animais por espécie e faixa etária, incluindo a faixa `Unknown` para datas de nascimento ausentes ou futuras.
 
-Os campos das respostas JSON usam nomes em inglês. O SQL das consultas está explícito no repositório JDBC e reunido em `database/03_consultas.sql` para a entrega.
+Os campos das respostas JSON usam nomes em inglês. O SQL está explícito no repositório JDBC; as consultas implementadas até agora estão reunidas em `database/03_consultas.sql`.
 
 ## Contribuição
 

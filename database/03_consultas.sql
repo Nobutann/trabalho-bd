@@ -29,3 +29,17 @@ SELECT
 FROM Animal a
 GROUP BY a.especie
 ORDER BY a.especie;
+
+-- 3. Animal counts by species and age group
+SELECT
+    a.especie,
+    CASE
+        WHEN a.dataNascimento IS NULL OR a.dataNascimento > CURDATE() THEN 'Unknown'
+        WHEN TIMESTAMPDIFF(YEAR, a.dataNascimento, CURDATE()) < 2 THEN '0-1'
+        WHEN TIMESTAMPDIFF(YEAR, a.dataNascimento, CURDATE()) < 5 THEN '2-4'
+        ELSE '5+'
+    END AS ageGroup,
+    COUNT(*) AS total
+FROM Animal a
+GROUP BY a.especie, ageGroup
+ORDER BY a.especie, ageGroup;

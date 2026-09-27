@@ -41,6 +41,21 @@ public class AnimalRepository {
             ORDER BY a.especie
             """;
 
+    private static final String AGE_GROUP_SUMMARY_SQL = """
+            SELECT
+                a.especie,
+                CASE
+                    WHEN a.dataNascimento IS NULL OR a.dataNascimento > CURDATE() THEN 'Unknown'
+                    WHEN TIMESTAMPDIFF(YEAR, a.dataNascimento, CURDATE()) < 2 THEN '0-1'
+                    WHEN TIMESTAMPDIFF(YEAR, a.dataNascimento, CURDATE()) < 5 THEN '2-4'
+                    ELSE '5+'
+                END AS ageGroup,
+                COUNT(*) AS total
+            FROM Animal a
+            GROUP BY a.especie, ageGroup
+            ORDER BY a.especie, ageGroup
+            """;
+
     private final JdbcTemplate jdbcTemplate;
 
     public AnimalRepository(JdbcTemplate jdbcTemplate) {
@@ -76,6 +91,16 @@ public class AnimalRepository {
                         resultSet.getLong("total"),
                         resultSet.getLong("available"),
                         resultSet.getLong("unavailable")
+                )
+        );
+    }
+
+    public List<AnimalAgeGroupSummary> summarizeByAgeGroup() {
+        return jdbcTemplate.query(AGE_GROUP_SUMMARY_SQL, (resultSet, rowNumber) ->
+                new AnimalAgeGroupSummary(
+                        resultSet.getString("especie"),
+                        resultSet.getString("ageGroup"),
+                        resultSet.getLong("total")
                 )
         );
     }

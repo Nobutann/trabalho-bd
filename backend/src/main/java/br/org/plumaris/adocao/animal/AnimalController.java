@@ -25,4 +25,9 @@ public class AnimalController {
     public List<AnimalSpeciesSummary> summarizeBySpecies() {
         return animalRepository.summarizeBySpecies();
     }
+
+    @GetMapping("/faixas-etarias")
+    public List<AnimalAgeGroupSummary> summarizeByAgeGroup() {
+        return animalRepository.summarizeByAgeGroup();
+    }
 }
