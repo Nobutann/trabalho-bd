@@ -1,6 +1,8 @@
 package br.org.plumaris.adocao.animal;
 
 import java.sql.Date;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -56,6 +58,42 @@ public class AnimalRepository {
             ORDER BY a.especie, ageGroup
             """;
 
+    private static final String FIND_RECOMMENDED_SQL = """
+            SELECT
+                a.idAnimal,
+                a.nome,
+                a.especie,
+                a.dataNascimento,
+                a.sexo,
+                a.porte,
+                a.cor,
+                a.descricao,
+                a.disponibilidade,
+                a.idCentro,
+                c.nome AS centroNome,
+                a.idRaca,
+                r.nome AS racaNome
+            FROM Preferencia p
+            JOIN Animal a ON a.disponibilidade = 1
+                AND (p.especieDesejada IS NULL OR a.especie = p.especieDesejada)
+            JOIN Centro_Adocao c ON c.idConta = a.idCentro
+            LEFT JOIN Raca r ON r.idRaca = a.idRaca
+            WHERE p.idConta = ?
+                AND (p.porteDesejado IS NULL OR a.porte = p.porteDesejado)
+                AND (p.sexoDesejado IS NULL OR a.sexo = p.sexoDesejado)
+                AND (p.corDesejada IS NULL OR a.cor = p.corDesejada)
+                AND (p.idRaca IS NULL OR a.idRaca = p.idRaca)
+                AND (p.idadeMinima IS NULL OR (
+                    a.dataNascimento <= CURDATE()
+                    AND TIMESTAMPDIFF(YEAR, a.dataNascimento, CURDATE()) >= p.idadeMinima
+                ))
+                AND (p.idadeMaxima IS NULL OR (
+                    a.dataNascimento <= CURDATE()
+                    AND TIMESTAMPDIFF(YEAR, a.dataNascimento, CURDATE()) <= p.idadeMaxima
+                ))
+            ORDER BY a.idAnimal
+            """;
+
     private final JdbcTemplate jdbcTemplate;
 
     public AnimalRepository(JdbcTemplate jdbcTemplate) {
@@ -63,25 +101,7 @@ public class AnimalRepository {
     }
 
     public List<AnimalResponse> findAll() {
-        return jdbcTemplate.query(FIND_ALL_SQL, (resultSet, rowNumber) -> {
-            Date birthDate = resultSet.getDate("dataNascimento");
-
-            return new AnimalResponse(
-                    resultSet.getInt("idAnimal"),
-                    resultSet.getString("nome"),
-                    resultSet.getString("especie"),
-                    birthDate == null ? null : birthDate.toLocalDate(),
-                    resultSet.getString("sexo"),
-                    resultSet.getString("porte"),
-                    resultSet.getString("cor"),
-                    resultSet.getString("descricao"),
-                    resultSet.getBoolean("disponibilidade"),
-                    resultSet.getInt("idCentro"),
-                    resultSet.getString("centroNome"),
-                    resultSet.getObject("idRaca", Integer.class),
-                    resultSet.getString("racaNome")
-            );
-        });
+        return jdbcTemplate.query(FIND_ALL_SQL, AnimalRepository::mapAnimal);
     }
 
     public List<AnimalSpeciesSummary> summarizeBySpecies() {
@@ -102,6 +122,31 @@ public class AnimalRepository {
                         resultSet.getString("ageGroup"),
                         resultSet.getLong("total")
                 )
+        );
+    }
+
+    public List<AnimalResponse> findRecommendedForUser(int userId) {
+        return jdbcTemplate.query(FIND_RECOMMENDED_SQL,
+                statement -> statement.setInt(1, userId), AnimalRepository::mapAnimal);
+    }
+
+    private static AnimalResponse mapAnimal(ResultSet resultSet, int rowNumber) throws SQLException {
+        Date birthDate = resultSet.getDate("dataNascimento");
+
+        return new AnimalResponse(
+                resultSet.getInt("idAnimal"),
+                resultSet.getString("nome"),
+                resultSet.getString("especie"),
+                birthDate == null ? null : birthDate.toLocalDate(),
+                resultSet.getString("sexo"),
+                resultSet.getString("porte"),
+                resultSet.getString("cor"),
+                resultSet.getString("descricao"),
+                resultSet.getBoolean("disponibilidade"),
+                resultSet.getInt("idCentro"),
+                resultSet.getString("centroNome"),
+                resultSet.getObject("idRaca", Integer.class),
+                resultSet.getString("racaNome")
         );
     }
 }
