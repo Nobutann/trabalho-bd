@@ -20,4 +20,9 @@ public class AnimalController {
     public List<AnimalResponse> findAll() {
         return animalRepository.findAll();
     }
+
+    @GetMapping("/resumo-por-especie")
+    public List<AnimalSpeciesSummary> summarizeBySpecies() {
+        return animalRepository.summarizeBySpecies();
+    }
 }

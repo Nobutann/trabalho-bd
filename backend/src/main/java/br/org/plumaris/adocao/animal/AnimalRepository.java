@@ -30,6 +30,17 @@ public class AnimalRepository {
             ORDER BY a.idAnimal
             """;
 
+    private static final String SPECIES_SUMMARY_SQL = """
+            SELECT
+                a.especie,
+                COUNT(*) AS total,
+                SUM(CASE WHEN a.disponibilidade = 1 THEN 1 ELSE 0 END) AS available,
+                SUM(CASE WHEN a.disponibilidade = 0 THEN 1 ELSE 0 END) AS unavailable
+            FROM Animal a
+            GROUP BY a.especie
+            ORDER BY a.especie
+            """;
+
     private final JdbcTemplate jdbcTemplate;
 
     public AnimalRepository(JdbcTemplate jdbcTemplate) {
@@ -56,5 +67,16 @@ public class AnimalRepository {
                     resultSet.getString("racaNome")
             );
         });
+    }
+
+    public List<AnimalSpeciesSummary> summarizeBySpecies() {
+        return jdbcTemplate.query(SPECIES_SUMMARY_SQL, (resultSet, rowNumber) ->
+                new AnimalSpeciesSummary(
+                        resultSet.getString("especie"),
+                        resultSet.getLong("total"),
+                        resultSet.getLong("available"),
+                        resultSet.getLong("unavailable")
+                )
+        );
     }
 }

@@ -2,13 +2,13 @@
 
 Aplicação web para consultar cães e gatos disponíveis para adoção e os centros responsáveis por eles. O projeto terá uma API REST em Java e uma interface independente em React.
 
-> **Estado:** em desenvolvimento. O backend possui uma rota de leitura de animais. Ainda não há frontend implementado.
+> **Estado:** em desenvolvimento. O backend possui duas rotas de leitura de animais. Ainda não há frontend implementado.
 
 ## Estrutura
 
 ```text
 backend/   API Spring Boot
-database/  Criação das tabelas e dados iniciais do MySQL
+database/  Tabelas, dados iniciais e consultas SQL
 ```
 
 O backend usa Java 21, Spring Boot 4.1.1, Maven e JDBC. As consultas e operações de escrita serão implementadas com SQL explícito. O frontend será desenvolvido em React com TypeScript e consumirá a API em JSON.
@@ -48,7 +48,12 @@ Na pasta `backend/`, execute:
 
 Em Linux ou macOS, use `./mvnw spring-boot:run`. No Eclipse, importe `backend/` como projeto Maven e execute `br.org.plumaris.adocao.AdocaoApplication` como aplicação Java. Se a variável `DB_PASSWORD` foi criada após abrir o Eclipse, reinicie o IDE antes de executar.
 
-O servidor inicia na porta 8080. A rota `GET /api/animais` lista os animais com os nomes do centro de adoção e da raça. Os campos da resposta JSON usam nomes em inglês. A consulta está escrita explicitamente no repositório JDBC.
+O servidor inicia na porta 8080. As rotas disponíveis são:
+
+- `GET /api/animais`: lista os animais com os nomes do centro de adoção e da raça.
+- `GET /api/animais/resumo-por-especie`: retorna os totais de animais disponíveis e indisponíveis por espécie.
+
+Os campos das respostas JSON usam nomes em inglês. O SQL das consultas está explícito no repositório JDBC e reunido em `database/03_consultas.sql` para a entrega.
 
 ## Contribuição
 
@@ -61,4 +66,4 @@ docs: document local setup
 
 ## Licença
 
-A licença do projeto ainda não foi definida. Antes de publicá-lo como software de código aberto, será necessário escolher uma licença e adicionar o arquivo `LICENSE`.
+O projeto é distribuído sob a licença MIT. Consulte o arquivo [LICENSE](LICENSE).
