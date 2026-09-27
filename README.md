@@ -2,7 +2,7 @@
 
 Aplicação para consultar cães, gatos e os centros de adoção responsáveis por eles. O backend oferece uma API REST em Java; o frontend é uma aplicação independente em React e TypeScript.
 
-> **Estado:** em desenvolvimento. O backend possui quatro consultas e operações de cadastro, alteração e exclusão de animais e raças. O frontend contém a estrutura inicial com Vite e Tailwind CSS; a interface da aplicação ainda será implementada.
+> **Estado:** em desenvolvimento. O backend possui quatro consultas e operações de cadastro, alteração e exclusão de animais e raças. O frontend oferece painel com gráficos, manutenção de animais e raças e visualização das quatro consultas.
 
 ## Estrutura
 
@@ -12,7 +12,7 @@ database/  Tabelas, dados iniciais e consultas SQL
 frontend/  Interface React e TypeScript
 ```
 
-O backend usa Java 21, Spring Boot 4.1.1, Maven e JDBC. As consultas e operações de escrita usam SQL explícito. O frontend usa React, TypeScript, Vite e Tailwind CSS e consumirá a API em JSON.
+O backend usa Java 21, Spring Boot 4.1.1, Maven e JDBC. As consultas e operações de escrita usam SQL explícito. O frontend usa React, TypeScript, Vite e Tailwind CSS e consome a API em JSON.
 
 ## Requisitos
 
@@ -72,7 +72,11 @@ npm install
 npm run dev
 ```
 
-O frontend ainda exibe a página inicial do Vite. Para conferir a compilação e as regras de código, execute `npm run build` e `npm run lint`.
+Acesse `http://localhost:5173` com o backend em execução na porta 8080. O servidor de desenvolvimento do Vite encaminha as chamadas `/api` ao Spring Boot. Para hospedar o frontend separadamente em produção, configure o servidor HTTP para encaminhar `/api` ao backend.
+
+O painel mostra gráficos de espécie, disponibilidade e faixas etárias calculados a partir das consultas SQL. As seções **Animais** e **Raças** permitem cadastro, edição e exclusão; **Consultas** apresenta os resultados das quatro consultas, incluindo recomendações pelo ID do usuário.
+
+Para conferir a compilação e as regras de código, execute `npm run build` e `npm run lint`.
 
 ## Contribuição
 
