@@ -2,7 +2,7 @@
 
 Aplicação web para consultar cães e gatos disponíveis para adoção e os centros responsáveis por eles. O projeto terá uma API REST em Java e uma interface independente em React.
 
-> **Estado:** em desenvolvimento. O repositório contém a estrutura inicial do backend e os scripts do banco. Ainda não há endpoints nem frontend implementados.
+> **Estado:** em desenvolvimento. O backend possui uma rota de leitura de animais. Ainda não há frontend implementado.
 
 ## Estrutura
 
@@ -48,7 +48,7 @@ Na pasta `backend/`, execute:
 
 Em Linux ou macOS, use `./mvnw spring-boot:run`. No Eclipse, importe `backend/` como projeto Maven e execute `br.org.plumaris.adocao.AdocaoApplication` como aplicação Java. Se a variável `DB_PASSWORD` foi criada após abrir o Eclipse, reinicie o IDE antes de executar.
 
-O servidor inicia na porta 8080. Como ainda não existem endpoints, uma requisição à raiz (`/`) retorna 404.
+O servidor inicia na porta 8080. A rota `GET /api/animais` lista os animais com os nomes do centro de adoção e da raça. Os campos da resposta JSON usam nomes em inglês. A consulta está escrita explicitamente no repositório JDBC.
 
 ## Contribuição
 
