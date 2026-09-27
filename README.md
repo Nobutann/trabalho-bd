@@ -1,4 +1,4 @@
-# Adoção
+# Plumaris - Adoção de Animais
 
 Aplicação para consultar cães, gatos e os centros de adoção responsáveis por eles. O backend oferece uma API REST em Java; o frontend é uma aplicação independente em React e TypeScript.
 
