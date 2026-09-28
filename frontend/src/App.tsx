@@ -127,7 +127,7 @@ function App() {
               </div>
             )}
             {data && page === 'dashboard' && <DashboardPage data={data} onNavigate={navigate} />}
-            {data && page === 'animals' && <AnimalsPage animals={data.animals} breeds={data.breeds} refresh={refresh} />}
+            {data && page === 'animals' && <AnimalsPage animals={data.animals} breeds={data.breeds} centers={data.centers} refresh={refresh} />}
             {data && page === 'breeds' && <BreedsPage breeds={data.breeds} refresh={refresh} />}
             {data && page === 'reports' && <ReportsPage data={data} />}
           </div>

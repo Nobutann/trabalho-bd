@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { api } from '../api'
 import { dateLabel, sexLabel, sizeLabel, speciesLabel } from '../format'
-import type { Animal, AnimalInput, Breed, Species } from '../types'
+import type { Animal, AnimalInput, Breed, Center, Species } from '../types'
 import {
   Availability,
   EmptyState,
@@ -19,6 +19,7 @@ import {
 interface AnimalsPageProps {
   animals: Animal[]
   breeds: Breed[]
+  centers: Center[]
   refresh: () => Promise<void>
 }
 
@@ -50,7 +51,7 @@ function draftFromAnimal(animal: Animal | null): AnimalDraft {
   }
 }
 
-export function AnimalsPage({ animals, breeds, refresh }: AnimalsPageProps) {
+export function AnimalsPage({ animals, breeds, centers, refresh }: AnimalsPageProps) {
   const [search, setSearch] = useState('')
   const [speciesFilter, setSpeciesFilter] = useState('all')
   const [availabilityFilter, setAvailabilityFilter] = useState('all')
@@ -72,8 +73,6 @@ export function AnimalsPage({ animals, breeds, refresh }: AnimalsPageProps) {
     if (editor === target) editorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  const centers = [...new Map(animals.map((animal) => [animal.centerId, animal.centerName])).entries()]
-    .sort(([a], [b]) => a - b)
   const filteredAnimals = animals.filter((animal) => {
     const term = search.trim().toLocaleLowerCase('pt-BR')
     const matchesSearch = !term || [animal.name, animal.breedName, animal.centerName, String(animal.id)]
@@ -190,7 +189,7 @@ export function AnimalsPage({ animals, breeds, refresh }: AnimalsPageProps) {
 function AnimalForm({ animal, breeds, centers, busy, onCancel, onSave }: {
   animal: Animal | null
   breeds: Breed[]
-  centers: [number, string][]
+  centers: Center[]
   busy: boolean
   onCancel: () => void
   onSave: (input: AnimalInput) => Promise<void>
@@ -236,10 +235,11 @@ function AnimalForm({ animal, breeds, centers, busy, onCancel, onSave }: {
             {matchingBreeds.map((breed) => <option key={breed.id} value={breed.id}>{breed.name}</option>)}
           </select>
         </label>
-        <label className="block text-xs font-medium text-[#a9c2d2]">ID do centro de adoção *
-          <input className={`${fieldClass} mt-1.5`} type="number" min="1" step="1" list="known-centers" value={draft.centerId} onChange={(event) => update('centerId', event.target.value)} required />
-          <datalist id="known-centers">{centers.map(([id, name]) => <option key={id} value={id} label={name} />)}</datalist>
-          <span className="mt-1 block text-[11px] font-normal text-[#819caf]">Informe o ID de um centro existente. Sugestões são obtidas dos animais cadastrados.</span>
+        <label className="block text-xs font-medium text-[#a9c2d2]">Centro de adoção *
+          <select className={`${fieldClass} mt-1.5`} value={draft.centerId} onChange={(event) => update('centerId', event.target.value)} required>
+            <option value="">Selecione um centro</option>
+            {centers.map((center) => <option key={center.id} value={center.id}>{center.name} (#{center.id})</option>)}
+          </select>
         </label>
         <label className="block text-xs font-medium text-[#a9c2d2]">Data de nascimento
           <input className={`${fieldClass} mt-1.5`} type="date" max={new Date().toISOString().slice(0, 10)} value={draft.birthDate} onChange={(event) => update('birthDate', event.target.value)} />

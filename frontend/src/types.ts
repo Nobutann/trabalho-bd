@@ -37,6 +37,11 @@ export interface Breed {
 
 export type BreedInput = Pick<Breed, 'name' | 'species'>
 
+export interface Center {
+  id: number
+  name: string
+}
+
 export interface SpeciesSummary {
   species: Species
   total: number
@@ -53,6 +58,7 @@ export interface AgeGroupSummary {
 export interface DashboardData {
   animals: Animal[]
   breeds: Breed[]
+  centers: Center[]
   speciesSummary: SpeciesSummary[]
   ageGroupSummary: AgeGroupSummary[]
 }

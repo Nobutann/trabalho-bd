@@ -4,6 +4,7 @@ import type {
   AnimalInput,
   Breed,
   BreedInput,
+  Center,
   DashboardData,
   SpeciesSummary,
 } from './types'
@@ -43,14 +44,15 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
 export const api = {
   async loadDashboard(): Promise<DashboardData> {
-    const [animals, breeds, speciesSummary, ageGroupSummary] = await Promise.all([
+    const [animals, breeds, centers, speciesSummary, ageGroupSummary] = await Promise.all([
       request<Animal[]>('/animais'),
       request<Breed[]>('/racas'),
+      request<Center[]>('/centros'),
       request<SpeciesSummary[]>('/animais/resumo-por-especie'),
       request<AgeGroupSummary[]>('/animais/faixas-etarias'),
     ])
 
-    return { animals, breeds, speciesSummary, ageGroupSummary }
+    return { animals, breeds, centers, speciesSummary, ageGroupSummary }
   },
 
   recommendedAnimals(userId: number): Promise<Animal[]> {
