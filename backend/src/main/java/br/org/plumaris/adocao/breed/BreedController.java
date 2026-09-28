@@ -3,7 +3,6 @@ package br.org.plumaris.adocao.breed;
 import java.util.List;
 
 import jakarta.validation.Valid;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+
+import br.org.plumaris.adocao.database.DatabaseConstraintException;
 
 @RestController
 @RequestMapping("/api/racas")
@@ -59,7 +60,7 @@ public class BreedController {
         }
     }
 
-    @ExceptionHandler(DuplicateKeyException.class)
+    @ExceptionHandler(DatabaseConstraintException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ProblemDetail handleDuplicate() {
         return ProblemDetail.forStatusAndDetail(

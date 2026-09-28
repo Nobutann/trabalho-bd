@@ -1,17 +1,18 @@
 package br.org.plumaris.adocao.breed;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+
+import br.org.plumaris.adocao.database.DatabaseConnectionFactory;
+import br.org.plumaris.adocao.database.DatabaseException;
 
 @Repository
 public class BreedRepository {
@@ -44,46 +45,79 @@ public class BreedRepository {
             WHERE idRaca = ?
             """;
 
-    private final JdbcTemplate jdbcTemplate;
+    private final DatabaseConnectionFactory connectionFactory;
 
-    public BreedRepository(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public BreedRepository(DatabaseConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory;
     }
 
     public List<BreedResponse> findAll() {
-        return jdbcTemplate.query(FIND_ALL_SQL, BreedRepository::mapBreed);
+        List<BreedResponse> breeds = new ArrayList<>();
+        try (Connection connection = connectionFactory.openConnection();
+                PreparedStatement statement = connection.prepareStatement(FIND_ALL_SQL);
+                ResultSet results = statement.executeQuery()) {
+            while (results.next()) {
+                breeds.add(mapBreed(results));
+            }
+            return breeds;
+        } catch (SQLException exception) {
+            throw DatabaseException.from(exception);
+        }
     }
 
     public Optional<BreedResponse> findById(int id) {
-        return jdbcTemplate.query(FIND_BY_ID_SQL, BreedRepository::mapBreed, id)
-                .stream()
-                .findFirst();
+        try (Connection connection = connectionFactory.openConnection();
+                PreparedStatement statement = connection.prepareStatement(FIND_BY_ID_SQL)) {
+            statement.setInt(1, id);
+            try (ResultSet results = statement.executeQuery()) {
+                return results.next() ? Optional.of(mapBreed(results)) : Optional.empty();
+            }
+        } catch (SQLException exception) {
+            throw DatabaseException.from(exception);
+        }
     }
 
     public BreedResponse create(String name, String species) {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-
-        jdbcTemplate.update(connection -> {
-            PreparedStatement statement = connection.prepareStatement(INSERT_SQL, Statement.RETURN_GENERATED_KEYS);
+        try (Connection connection = connectionFactory.openConnection();
+                PreparedStatement statement = connection.prepareStatement(INSERT_SQL, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, name);
             statement.setString(2, species);
-            return statement;
-        }, keyHolder);
-
-        int id = Objects.requireNonNull(keyHolder.getKey()).intValue();
-        return new BreedResponse(id, name, species);
+            statement.executeUpdate();
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (!keys.next()) {
+                    throw new IllegalStateException("Created breed has no generated ID");
+                }
+                return new BreedResponse(keys.getInt(1), name, species);
+            }
+        } catch (SQLException exception) {
+            throw DatabaseException.from(exception);
+        }
     }
 
     public Optional<BreedResponse> update(int id, String name, String species) {
-        jdbcTemplate.update(UPDATE_SQL, name, species, id);
+        try (Connection connection = connectionFactory.openConnection();
+                PreparedStatement statement = connection.prepareStatement(UPDATE_SQL)) {
+            statement.setString(1, name);
+            statement.setString(2, species);
+            statement.setInt(3, id);
+            statement.executeUpdate();
+        } catch (SQLException exception) {
+            throw DatabaseException.from(exception);
+        }
         return findById(id);
     }
 
     public boolean delete(int id) {
-        return jdbcTemplate.update(DELETE_SQL, id) > 0;
+        try (Connection connection = connectionFactory.openConnection();
+                PreparedStatement statement = connection.prepareStatement(DELETE_SQL)) {
+            statement.setInt(1, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException exception) {
+            throw DatabaseException.from(exception);
+        }
     }
 
-    private static BreedResponse mapBreed(ResultSet resultSet, int rowNumber) throws SQLException {
+    private static BreedResponse mapBreed(ResultSet resultSet) throws SQLException {
         return new BreedResponse(
                 resultSet.getInt("idRaca"),
                 resultSet.getString("nome"),

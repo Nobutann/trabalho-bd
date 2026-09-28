@@ -12,7 +12,7 @@ database/  Tabelas, dados iniciais e consultas SQL
 frontend/  Interface React e TypeScript
 ```
 
-O backend usa Java 21, Spring Boot 4.1.1, Maven e JDBC. As consultas e operações de escrita usam SQL explícito. O frontend usa React, TypeScript, Vite e Tailwind CSS e consome a API em JSON.
+O backend usa Java 21, Spring Boot 4.1.1, Maven e JDBC direto com o driver do MySQL, sem ORM. As consultas e operações de escrita usam SQL explícito. O frontend usa React, TypeScript, Vite e Tailwind CSS e consome a API em JSON.
 
 ## Requisitos
 
@@ -58,6 +58,8 @@ O servidor inicia na porta 8080. As rotas de consulta de animais são:
 - `GET /api/animais/recomendados?userId=1`: lista animais disponíveis que atendem aos filtros cadastrados nas preferências do usuário. Retorna uma lista vazia quando não há preferências ou correspondências.
 
 Os campos das respostas JSON usam nomes em inglês. O SQL está explícito no repositório JDBC; as quatro consultas estão reunidas em `database/03_consultas.sql`. Para executar a quarta no Workbench com outro usuário, altere o valor de `@user_id` no arquivo.
+
+`GET /api/centros` lista os centros de adoção disponíveis para o cadastro de animais.
 
 Para gerenciar animais, a API oferece também `GET /api/animais/{id}`, `POST /api/animais`, `PUT /api/animais/{id}` e `DELETE /api/animais/{id}`. Um corpo mínimo para criação ou alteração é `{"name":"Fido","species":"Cao","available":true,"centerId":32}`. O centro deve existir; `breedId` é opcional e, quando informado, precisa pertencer à mesma espécie. A exclusão de um animal também exclui suas fotos e registros de interesse, conforme as chaves estrangeiras do banco.
 

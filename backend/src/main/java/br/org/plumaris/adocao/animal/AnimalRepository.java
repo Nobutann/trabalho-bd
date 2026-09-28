@@ -1,19 +1,20 @@
 package br.org.plumaris.adocao.animal;
 
+import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+
+import br.org.plumaris.adocao.database.DatabaseConnectionFactory;
+import br.org.plumaris.adocao.database.DatabaseException;
 
 @Repository
 public class AnimalRepository {
@@ -153,83 +154,148 @@ public class AnimalRepository {
             WHERE idRaca = ?
             """;
 
-    private final JdbcTemplate jdbcTemplate;
+    private final DatabaseConnectionFactory connectionFactory;
 
-    public AnimalRepository(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public AnimalRepository(DatabaseConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory;
     }
 
     public List<AnimalResponse> findAll() {
-        return jdbcTemplate.query(FIND_ALL_SQL, AnimalRepository::mapAnimal);
+        List<AnimalResponse> animals = new ArrayList<>();
+        try (Connection connection = connectionFactory.openConnection();
+                PreparedStatement statement = connection.prepareStatement(FIND_ALL_SQL);
+                ResultSet results = statement.executeQuery()) {
+            while (results.next()) {
+                animals.add(mapAnimal(results));
+            }
+            return animals;
+        } catch (SQLException exception) {
+            throw DatabaseException.from(exception);
+        }
     }
 
     public Optional<AnimalResponse> findById(int id) {
-        return jdbcTemplate.query(FIND_BY_ID_SQL, AnimalRepository::mapAnimal, id)
-                .stream()
-                .findFirst();
+        try (Connection connection = connectionFactory.openConnection();
+                PreparedStatement statement = connection.prepareStatement(FIND_BY_ID_SQL)) {
+            statement.setInt(1, id);
+            try (ResultSet results = statement.executeQuery()) {
+                return results.next() ? Optional.of(mapAnimal(results)) : Optional.empty();
+            }
+        } catch (SQLException exception) {
+            throw DatabaseException.from(exception);
+        }
     }
 
     public List<AnimalSpeciesSummary> summarizeBySpecies() {
-        return jdbcTemplate.query(SPECIES_SUMMARY_SQL, (resultSet, rowNumber) ->
-                new AnimalSpeciesSummary(
-                        resultSet.getString("especie"),
-                        resultSet.getLong("total"),
-                        resultSet.getLong("available"),
-                        resultSet.getLong("unavailable")
-                )
-        );
+        List<AnimalSpeciesSummary> summaries = new ArrayList<>();
+        try (Connection connection = connectionFactory.openConnection();
+                PreparedStatement statement = connection.prepareStatement(SPECIES_SUMMARY_SQL);
+                ResultSet results = statement.executeQuery()) {
+            while (results.next()) {
+                summaries.add(new AnimalSpeciesSummary(
+                        results.getString("especie"),
+                        results.getLong("total"),
+                        results.getLong("available"),
+                        results.getLong("unavailable")));
+            }
+            return summaries;
+        } catch (SQLException exception) {
+            throw DatabaseException.from(exception);
+        }
     }
 
     public List<AnimalAgeGroupSummary> summarizeByAgeGroup() {
-        return jdbcTemplate.query(AGE_GROUP_SUMMARY_SQL, (resultSet, rowNumber) ->
-                new AnimalAgeGroupSummary(
-                        resultSet.getString("especie"),
-                        resultSet.getString("ageGroup"),
-                        resultSet.getLong("total")
-                )
-        );
+        List<AnimalAgeGroupSummary> summaries = new ArrayList<>();
+        try (Connection connection = connectionFactory.openConnection();
+                PreparedStatement statement = connection.prepareStatement(AGE_GROUP_SUMMARY_SQL);
+                ResultSet results = statement.executeQuery()) {
+            while (results.next()) {
+                summaries.add(new AnimalAgeGroupSummary(
+                        results.getString("especie"),
+                        results.getString("ageGroup"),
+                        results.getLong("total")));
+            }
+            return summaries;
+        } catch (SQLException exception) {
+            throw DatabaseException.from(exception);
+        }
     }
 
     public List<AnimalResponse> findRecommendedForUser(int userId) {
-        return jdbcTemplate.query(FIND_RECOMMENDED_SQL,
-                statement -> statement.setInt(1, userId), AnimalRepository::mapAnimal);
+        List<AnimalResponse> animals = new ArrayList<>();
+        try (Connection connection = connectionFactory.openConnection();
+                PreparedStatement statement = connection.prepareStatement(FIND_RECOMMENDED_SQL)) {
+            statement.setInt(1, userId);
+            try (ResultSet results = statement.executeQuery()) {
+                while (results.next()) {
+                    animals.add(mapAnimal(results));
+                }
+            }
+            return animals;
+        } catch (SQLException exception) {
+            throw DatabaseException.from(exception);
+        }
     }
 
     public int create(AnimalRequest request) {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-
-        jdbcTemplate.update(connection -> {
-            PreparedStatement statement = connection.prepareStatement(INSERT_SQL, Statement.RETURN_GENERATED_KEYS);
+        try (Connection connection = connectionFactory.openConnection();
+                PreparedStatement statement = connection.prepareStatement(INSERT_SQL, Statement.RETURN_GENERATED_KEYS)) {
             bindAnimal(statement, request);
-            return statement;
-        }, keyHolder);
-
-        return Objects.requireNonNull(keyHolder.getKey()).intValue();
+            statement.executeUpdate();
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (!keys.next()) {
+                    throw new IllegalStateException("Created animal has no generated ID");
+                }
+                return keys.getInt(1);
+            }
+        } catch (SQLException exception) {
+            throw DatabaseException.from(exception);
+        }
     }
 
     public void update(int id, AnimalRequest request) {
-        jdbcTemplate.update(connection -> {
-            PreparedStatement statement = connection.prepareStatement(UPDATE_SQL);
+        try (Connection connection = connectionFactory.openConnection();
+                PreparedStatement statement = connection.prepareStatement(UPDATE_SQL)) {
             bindAnimal(statement, request);
             statement.setInt(11, id);
-            return statement;
-        });
+            statement.executeUpdate();
+        } catch (SQLException exception) {
+            throw DatabaseException.from(exception);
+        }
     }
 
     public boolean delete(int id) {
-        return jdbcTemplate.update(DELETE_SQL, id) > 0;
+        try (Connection connection = connectionFactory.openConnection();
+                PreparedStatement statement = connection.prepareStatement(DELETE_SQL)) {
+            statement.setInt(1, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException exception) {
+            throw DatabaseException.from(exception);
+        }
     }
 
     public boolean centerExists(int centerId) {
-        Integer count = jdbcTemplate.queryForObject(CENTER_EXISTS_SQL, Integer.class, centerId);
-        return count != null && count > 0;
+        try (Connection connection = connectionFactory.openConnection();
+                PreparedStatement statement = connection.prepareStatement(CENTER_EXISTS_SQL)) {
+            statement.setInt(1, centerId);
+            try (ResultSet results = statement.executeQuery()) {
+                return results.next() && results.getInt(1) > 0;
+            }
+        } catch (SQLException exception) {
+            throw DatabaseException.from(exception);
+        }
     }
 
     public Optional<String> findBreedSpecies(int breedId) {
-        return jdbcTemplate.query(FIND_BREED_SPECIES_SQL,
-                (resultSet, rowNumber) -> resultSet.getString("especie"), breedId)
-                .stream()
-                .findFirst();
+        try (Connection connection = connectionFactory.openConnection();
+                PreparedStatement statement = connection.prepareStatement(FIND_BREED_SPECIES_SQL)) {
+            statement.setInt(1, breedId);
+            try (ResultSet results = statement.executeQuery()) {
+                return results.next() ? Optional.of(results.getString("especie")) : Optional.empty();
+            }
+        } catch (SQLException exception) {
+            throw DatabaseException.from(exception);
+        }
     }
 
     private static void bindAnimal(PreparedStatement statement, AnimalRequest request) throws SQLException {
@@ -264,7 +330,7 @@ public class AnimalRepository {
         }
     }
 
-    private static AnimalResponse mapAnimal(ResultSet resultSet, int rowNumber) throws SQLException {
+    private static AnimalResponse mapAnimal(ResultSet resultSet) throws SQLException {
         Date birthDate = resultSet.getDate("dataNascimento");
 
         return new AnimalResponse(

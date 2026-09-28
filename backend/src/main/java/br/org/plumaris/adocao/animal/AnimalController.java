@@ -3,9 +3,9 @@ package br.org.plumaris.adocao.animal;
 import java.util.List;
 
 import jakarta.validation.Valid;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+
+import br.org.plumaris.adocao.database.DatabaseConstraintException;
 
 @RestController
 @RequestMapping("/api/animais")
@@ -80,24 +82,31 @@ public class AnimalController {
         }
     }
 
-    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ExceptionHandler(DatabaseConstraintException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ProblemDetail handleDataIntegrityViolation() {
         return ProblemDetail.forStatusAndDetail(
                 HttpStatus.CONFLICT, "Animal could not be saved because of a database constraint");
     }
 
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ProblemDetail> handleResponseStatus(ResponseStatusException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                exception.getStatusCode(), exception.getReason());
+        return ResponseEntity.status(exception.getStatusCode()).body(problem);
+    }
+
     private void validateReferences(AnimalRequest request) {
         if (!animalRepository.centerExists(request.centerId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Adoption center not found");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Centro de adoção não encontrado");
         }
 
         if (request.breedId() != null) {
             String breedSpecies = animalRepository.findBreedSpecies(request.breedId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Breed not found"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Raça não encontrada"));
 
             if (!breedSpecies.equals(request.species())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Breed species does not match animal species");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A raça selecionada não corresponde à espécie do animal");
             }
         }
     }
