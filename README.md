@@ -2,7 +2,7 @@
 
 Aplicação para consultar cães, gatos e os centros de adoção responsáveis por eles. O backend oferece uma API REST em Java; o frontend é uma aplicação independente em React e TypeScript.
 
-> **Estado:** primeira versão alfa (`v0.1.0-alpha.1`). O backend possui quatro consultas e operações de cadastro, alteração e exclusão de animais e raças. O frontend oferece painel com gráficos, manutenção de animais e raças e visualização das quatro consultas.
+> **Estado:** primeira versão beta (`v0.1.0-beta.1`). O backend possui quatro consultas e operações de cadastro, alteração e exclusão de animais e raças. O frontend oferece painel com gráficos, manutenção de animais e raças e visualização das quatro consultas.
 
 ## Estrutura
 
